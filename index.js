@@ -23,7 +23,17 @@ function initializeData() {
 }
 
 // TASK: Get elements from the DOM
-const elements = {};
+const elements = {
+  hideSideBarBtn: document.getElementById("hide-side-bar-btn"),
+  showSideBarBtn: document.getElementById("show-side-bar-btn"),
+  headerBoardName: document.getElementById("header-board-name"),
+  columnDivs: document.querySelectorAll(".column-div"),
+  editTaskModal: document.querySelector(".edit-task-modal-window"),
+  filterDiv: document.getElementById("filterDiv"),
+  createNewTaskBtn: document.getElementById("add-new-task-btn"),
+  modalWindow: document.querySelector(".modal-window"),
+  themeSwitch: document.getElementById("switch"),
+};
 
 let activeBoard = "";
 
@@ -67,7 +77,7 @@ function displayBoards(boards) {
 // TASK: Fix Bugs
 function filterAndDisplayTasksByBoard(boardName) {
   const tasks = getTasks(); // Fetch tasks from a simulated local storage function
-  const filteredTasks = tasks.filter((task) => (task.board = boardName));
+  const filteredTasks = tasks.filter((task) => task.board === boardName); // Added equality operator
 
   // Ensure the column titles are set outside of this function or correctly initialized before this function runs
 
@@ -83,7 +93,7 @@ function filterAndDisplayTasksByBoard(boardName) {
     column.appendChild(tasksContainer);
 
     filteredTasks
-      .filter((task) => (task.status = status))
+      .filter((task) => task.status === status) // Added equality operator
       .forEach((task) => {
         const taskElement = document.createElement("div");
         taskElement.classList.add("task-div");
@@ -107,16 +117,18 @@ function refreshTasksUI() {
 // Styles the active board by adding an active class
 // TASK: Fix Bugs
 function styleActiveBoard(boardName) {
-  document.querySelectorAll(".board-btn").foreach((btn) => {
+  document.querySelectorAll(".board-btn").forEach((btn) => {
+    // Changed foreach to capital E
     if (btn.textContent === boardName) {
-      btn.add("active");
+      btn.classList.add("active"); // Added active class
     } else {
-      btn.remove("active");
+      btn.classList.remove("active");
     }
   });
 }
 
 function addTaskToUI(task) {
+  console.log("Task status:", task.status);
   const column = document.querySelector(
     '.column-div[data-status="${task.status}"]'
   );
@@ -146,7 +158,9 @@ function addTaskToUI(task) {
 function setupEventListeners() {
   // Cancel editing task event listener
   const cancelEditBtn = document.getElementById("cancel-edit-btn");
-  cancelEditBtn.click(() => toggleModal(false, elements.editTaskModal));
+  cancelEditBtn.addEventListener("click", () =>
+    toggleModal(false, elements.editTaskModal)
+  );
 
   // Cancel adding new task event listener
   const cancelAddTaskBtn = document.getElementById("cancel-add-task-btn");
@@ -162,8 +176,8 @@ function setupEventListeners() {
   });
 
   // Show sidebar event listener
-  elements.hideSideBarBtn.click(() => toggleSidebar(false));
-  elements.showSideBarBtn.click(() => toggleSidebar(true));
+  elements.hideSideBarBtn.addEventListener("click", () => toggleSidebar(false));
+  elements.showSideBarBtn.addEventListener("click", () => toggleSidebar(true));
 
   // Theme switch event listener
   elements.themeSwitch.addEventListener("change", toggleTheme);
@@ -194,7 +208,11 @@ function addTask(event) {
   event.preventDefault();
 
   //Assign user input to the task object
-  const task = {};
+  const task = {
+    title: document.getElementById("title-input").value,
+    description: document.getElementById("desc-input").value,
+    status: document.getElementById("select-status").value,
+  };
   const newTask = createNewTask(task);
   if (newTask) {
     addTaskToUI(newTask);
@@ -205,9 +223,24 @@ function addTask(event) {
   }
 }
 
-function toggleSidebar(show) {}
+function toggleSidebar(show) {
+  const sidebar = document.getElementById("side-bar-div");
 
-function toggleTheme() {}
+  if (show) {
+    sidebar.style.display = "block";
+    elements.showSideBarBtn.style.display = "none";
+    localStorage.setItem("showSideBar", "true");
+  } else {
+    sidebar.style.display = "none";
+    elements.showSideBarBtn.style.display = "block";
+    localStorage.setItem("showSideBar", "false");
+  }
+}
+
+function toggleTheme() {
+  const lightIcon = document.getElementById("icon-light");
+  const darkIcon = document.getElementById("icon-dark");
+}
 
 function openEditTaskModal(task) {
   // Set task details in modal inputs
@@ -246,4 +279,5 @@ function init() {
   const isLightTheme = localStorage.getItem("light-theme") === "enabled";
   document.body.classList.toggle("light-theme", isLightTheme);
   fetchAndDisplayBoardsAndTasks(); // Initial display of boards and tasks
+  initializeData();
 }
