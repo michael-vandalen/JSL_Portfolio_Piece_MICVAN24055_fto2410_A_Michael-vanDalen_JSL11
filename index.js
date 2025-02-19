@@ -101,7 +101,7 @@ function filterAndDisplayTasksByBoard(boardName) {
         taskElement.setAttribute("data-task-id", task.id);
 
         // Listen for a click event on each task and open a modal
-        taskElement.click(() => {
+        taskElement.addEventListener("click", () => {
           openEditTaskModal(task);
         });
 
@@ -244,23 +244,47 @@ function toggleTheme() {
 
 function openEditTaskModal(task) {
   // Set task details in modal inputs
+  const taskTitleInput = document.getElementById("edit-task-title-input");
+  const taskDescInput = document.getElementById("edit-task-desc-input");
+  const taskStatusInput = document.getElementById("edit-select-status");
 
+  taskTitleInput.value = task.title;
+  taskDescInput.value = task.description;
+  taskStatusInput.value = task.status;
   // Get button elements from the task modal
-
+  const saveChangesBtn = document.getElementById("save-task-changes-btn");
+  const deleteTaskBtn = document.getElementById("delete-task-btn");
+  const cancelBtn = document.getElementById("cancel-edit-btn");
   // Call saveTaskChanges upon click of Save Changes button
-
+  saveChangesBtn.onclick = function () {
+    saveTaskChanges(task.id);
+    toggleModal(false, elements.editTaskModal);
+  };
   // Delete task using a helper function and close the task modal
+  deleteTaskBtn.onclick = function () {
+    deleteTask(task.id);
+    toggleModal(false, elements.editTaskModal);
+  };
 
+  cancelBtn.onclick = function () {
+    toggleModal(false, elements.editTaskModal);
+  };
   toggleModal(true, elements.editTaskModal); // Show the edit task modal
 }
 
 function saveTaskChanges(taskId) {
   // Get new user inputs
-
+  const taskTitleInput = document.getElementById("edit-task-title-input").value;
+  const taskDescInput = document.getElementById("edit-task-desc-input").value;
+  const taskStatusInput = document.getElementById("edit-select-status").value;
   // Create an object with the updated task details
-
+  patchTask(taskId, {
+    title: taskTitleInput,
+    description: taskDescInput,
+    taskStatusInput: taskStatusInput,
+  });
   // Update task using a hlper functoin
-
+  toggleModal(true, elements.editTaskModal);
   // Close the modal and refresh the UI to reflect the changes
 
   refreshTasksUI();
