@@ -61,8 +61,7 @@ function displayBoards(boards) {
     const boardElement = document.createElement("button");
     boardElement.textContent = board;
     boardElement.classList.add("board-btn");
-    boardElement.click(() => {
-      // Added ()=>
+    boardElement.addEventListener("click", () => {
       elements.headerBoardName.textContent = board;
       filterAndDisplayTasksByBoard(board);
       activeBoard = board; //assigns active board
@@ -78,18 +77,19 @@ function displayBoards(boards) {
 function filterAndDisplayTasksByBoard(boardName) {
   const tasks = getTasks(); // Fetch tasks from a simulated local storage function
   const filteredTasks = tasks.filter((task) => task.board === boardName); // Added equality operator
-
   // Ensure the column titles are set outside of this function or correctly initialized before this function runs
 
   elements.columnDivs.forEach((column) => {
-    const status = column.getAttribute("data-status");
+    const status = column.getAttribute("data-status").trim().toLowerCase();
+
     // Reset column content while preserving the column title
-    column.innerHTML = `<div class="column-head-div">
+    column.innerHTML = ` <div class="column-head-div">
                           <span class="dot" id="${status}-dot"></span>
                           <h4 class="columnHeader">${status.toUpperCase()}</h4>
                         </div>`;
 
     const tasksContainer = document.createElement("div");
+    tasksContainer.classList.add("tasks-container");
     column.appendChild(tasksContainer);
 
     filteredTasks
@@ -128,9 +128,8 @@ function styleActiveBoard(boardName) {
 }
 
 function addTaskToUI(task) {
-  console.log("Task status:", task.status);
   const column = document.querySelector(
-    '.column-div[data-status="${task.status}"]'
+    `.column-div[data-status="${task.status}"]`
   );
   if (!column) {
     console.error(`Column not found for status: ${task.status}`);
@@ -152,7 +151,7 @@ function addTaskToUI(task) {
   taskElement.textContent = task.title; // Modify as needed
   taskElement.setAttribute("data-task-id", task.id);
 
-  tasksContainer.appendChild();
+  tasksContainer.appendChild(taskElement);
 }
 
 function setupEventListeners() {
@@ -220,6 +219,8 @@ function addTask(event) {
     elements.filterDiv.style.display = "none"; // Also hide the filter overlay
     event.target.reset();
     refreshTasksUI();
+  } else {
+    console.error("Failed to create task.");
   }
 }
 
@@ -237,10 +238,29 @@ function toggleSidebar(show) {
   }
 }
 
+const lightIcon = document.getElementById("icon-light");
+const darkIcon = document.getElementById("icon-dark");
+const checkbox = document.getElementById("switch");
+const logo = document.getElementById("logo");
+
 function toggleTheme() {
-  const lightIcon = document.getElementById("icon-light");
-  const darkIcon = document.getElementById("icon-dark");
+  const isLightTheme = checkbox.checked;
+
+  if (isLightTheme) {
+    // If checked, show light theme icon and hide dark theme
+    logo.src = "./assets/logo-light.svg"; // Light mode logo
+    lightIcon.style.display = "block";
+    document.body.classList.add("light-theme");
+    localStorage.setItem("light-theme", "enabled"); // Save the preference in localStorage
+  } else {
+    // If not checked, show dark theme icon and hide light theme
+    logo.src = "./assets/logo-dark.svg"; // Dark mode logo
+    darkIcon.style.display = "block";
+    document.body.classList.remove("light-theme");
+    localStorage.setItem("light-theme", "disabled"); // Save the preference in localStorage
+  }
 }
+checkbox.addEventListener("change", toggleTheme);
 
 function openEditTaskModal(task) {
   // Set task details in modal inputs
@@ -254,7 +274,6 @@ function openEditTaskModal(task) {
   // Get button elements from the task modal
   const saveChangesBtn = document.getElementById("save-task-changes-btn");
   const deleteTaskBtn = document.getElementById("delete-task-btn");
-  const cancelBtn = document.getElementById("cancel-edit-btn");
   // Call saveTaskChanges upon click of Save Changes button
   saveChangesBtn.onclick = function () {
     saveTaskChanges(task.id);
@@ -264,11 +283,10 @@ function openEditTaskModal(task) {
   deleteTaskBtn.onclick = function () {
     deleteTask(task.id);
     toggleModal(false, elements.editTaskModal);
+
+    refreshTasksUI(); // Ensure the task list is reloaded
   };
 
-  cancelBtn.onclick = function () {
-    toggleModal(false, elements.editTaskModal);
-  };
   toggleModal(true, elements.editTaskModal); // Show the edit task modal
 }
 
@@ -281,18 +299,18 @@ function saveTaskChanges(taskId) {
   patchTask(taskId, {
     title: taskTitleInput,
     description: taskDescInput,
-    taskStatusInput: taskStatusInput,
+    status: taskStatusInput,
   });
   // Update task using a hlper functoin
   toggleModal(true, elements.editTaskModal);
   // Close the modal and refresh the UI to reflect the changes
-
   refreshTasksUI();
 }
 
 /*************************************************************************************************************************************************/
 
 document.addEventListener("DOMContentLoaded", function () {
+  initializeData();
   init(); // init is called after the DOM is fully loaded
 });
 
@@ -303,5 +321,4 @@ function init() {
   const isLightTheme = localStorage.getItem("light-theme") === "enabled";
   document.body.classList.toggle("light-theme", isLightTheme);
   fetchAndDisplayBoardsAndTasks(); // Initial display of boards and tasks
-  initializeData();
 }
