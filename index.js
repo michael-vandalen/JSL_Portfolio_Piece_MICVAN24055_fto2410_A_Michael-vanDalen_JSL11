@@ -77,13 +77,13 @@ function displayBoards(boards) {
 function filterAndDisplayTasksByBoard(boardName) {
   const tasks = getTasks(); // Fetch tasks from a simulated local storage function
   const filteredTasks = tasks.filter((task) => task.board === boardName); // Added equality operator
+
   // Ensure the column titles are set outside of this function or correctly initialized before this function runs
 
   elements.columnDivs.forEach((column) => {
     const status = column.getAttribute("data-status").trim().toLowerCase();
-
     // Reset column content while preserving the column title
-    column.innerHTML = ` <div class="column-head-div">
+    column.innerHTML = `<div class="column-head-div">
                           <span class="dot" id="${status}-dot"></span>
                           <h4 class="columnHeader">${status.toUpperCase()}</h4>
                         </div>`;
@@ -93,7 +93,7 @@ function filterAndDisplayTasksByBoard(boardName) {
     column.appendChild(tasksContainer);
 
     filteredTasks
-      .filter((task) => task.status === status) // Added equality operator
+      .filter((task) => task.status.trim().toLowerCase() === status) // Added equality operator
       .forEach((task) => {
         const taskElement = document.createElement("div");
         taskElement.classList.add("task-div");
@@ -131,18 +131,21 @@ function addTaskToUI(task) {
   const column = document.querySelector(
     `.column-div[data-status="${task.status}"]`
   );
+
   if (!column) {
     console.error(`Column not found for status: ${task.status}`);
     return;
   }
 
   let tasksContainer = column.querySelector(".tasks-container");
+
   if (!tasksContainer) {
     console.warn(
       `Tasks container not found for status: ${task.status}, creating one.`
     );
     tasksContainer = document.createElement("div");
     tasksContainer.className = "tasks-container";
+    // Append container inside the
     column.appendChild(tasksContainer);
   }
 
@@ -206,19 +209,21 @@ function toggleModal(show, modal = elements.modalWindow) {
 function addTask(event) {
   event.preventDefault();
 
-  //Assign user input to the task object
+  // Assign user input to the task object
   const task = {
     title: document.getElementById("title-input").value,
     description: document.getElementById("desc-input").value,
     status: document.getElementById("select-status").value,
+    board: activeBoard, // Make sure to add it to the active board
   };
+
   const newTask = createNewTask(task);
   if (newTask) {
-    addTaskToUI(newTask);
+    addTaskToUI(newTask); // Immediately add it to the UI
     toggleModal(false);
     elements.filterDiv.style.display = "none"; // Also hide the filter overlay
     event.target.reset();
-    refreshTasksUI();
+    refreshTasksUI(); // Refresh the task UI to show the new task
   } else {
     console.error("Failed to create task.");
   }
@@ -228,11 +233,11 @@ function toggleSidebar(show) {
   const sidebar = document.getElementById("side-bar-div");
 
   if (show) {
-    sidebar.style.display = "block";
+    sidebar.classList.add("show-sidebar");
     elements.showSideBarBtn.style.display = "none";
     localStorage.setItem("showSideBar", "true");
   } else {
-    sidebar.style.display = "none";
+    sidebar.classList.remove("show-sidebar");
     elements.showSideBarBtn.style.display = "block";
     localStorage.setItem("showSideBar", "false");
   }
@@ -247,13 +252,11 @@ function toggleTheme() {
   const isLightTheme = checkbox.checked;
 
   if (isLightTheme) {
-    // If checked, show light theme icon and hide dark theme
     logo.src = "./assets/logo-light.svg"; // Light mode logo
     lightIcon.style.display = "block";
     document.body.classList.add("light-theme");
     localStorage.setItem("light-theme", "enabled"); // Save the preference in localStorage
   } else {
-    // If not checked, show dark theme icon and hide light theme
     logo.src = "./assets/logo-dark.svg"; // Dark mode logo
     darkIcon.style.display = "block";
     document.body.classList.remove("light-theme");
